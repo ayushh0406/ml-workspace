@@ -26,6 +26,7 @@ from xgboost import XGBRegressor
 from src.exception import CustomException
 from src.logger import logging
 from src.utils import save_object, evaluate_models
+from src.components.model_evaluator import ModelEvaluator
 
 
 @dataclass
@@ -88,13 +89,13 @@ class ModelTrainer:
                 },
             }
 
-            # Evaluate models
+            # Evaluate models with hyperparameter tuning
             model_report: dict = evaluate_models(
                 X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test,
                 models=models, param=params
             )
 
-            # Select best model
+            # Select best model based on R2 score
             best_model_score = max(sorted(model_report.values()))
             best_model_name = list(model_report.keys())[
                 list(model_report.values()).index(best_model_score)
@@ -106,53 +107,59 @@ class ModelTrainer:
 
             logging.info(f"Best model found: {best_model_name} with score {best_model_score}")
 
+            # Initialize comprehensive model evaluator
+            evaluator = ModelEvaluator()
+            
+            # Define feature names for feature importance plots
+            feature_names = ["writing_score", "reading_score", "gender", "race_ethnicity", 
+                           "parental_level_of_education", "lunch", "test_preparation_course"]
+            
+            # Perform comprehensive evaluation with visualizations
+            logging.info("Starting comprehensive model evaluation with visualizations")
+            all_metrics, eval_best_model_name = evaluator.evaluate_models_comprehensive(
+                models=models, 
+                X_train=X_train, 
+                y_train=y_train, 
+                X_test=X_test, 
+                y_test=y_test,
+                feature_names=feature_names
+            )
+
             # Save best model
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
                 obj=best_model,
             )
 
-            # Predictions
-            predicted = best_model.predict(X_test)
-
-            # Metrics
-            r2_square = r2_score(y_test, predicted)
-            mae = mean_absolute_error(y_test, predicted)
-            mse = mean_squared_error(y_test, predicted)
-            rmse = mse ** 0.5
-
-            logging.info(f"R2: {r2_square}, MAE: {mae}, MSE: {mse}, RMSE: {rmse}")
+            # Get best model metrics for return
+            best_model_metrics = next(metric for metric in all_metrics if metric['model_name'] == best_model_name)
+            r2_square = best_model_metrics['r2_score']
 
             # Cross-validation for robustness
             cv_scores = cross_val_score(best_model, X_train, y_train, cv=5, scoring="r2")
             logging.info(f"Cross-validation R2 scores: {cv_scores}")
             logging.info(f"Mean CV R2: {cv_scores.mean()}")
 
-            # Save metadata
+            # Save comprehensive metadata
             metadata = {
                 "model_name": best_model_name,
                 "train_score": best_model.score(X_train, y_train),
                 "test_score": r2_square,
                 "cv_mean_score": cv_scores.mean(),
-                "mae": mae,
-                "mse": mse,
-                "rmse": rmse,
+                "mae": best_model_metrics['mae'],
+                "mse": best_model_metrics['mse'],
+                "rmse": best_model_metrics['rmse'],
+                "mape": best_model_metrics['mape'],
+                "adjusted_r2": best_model_metrics['adjusted_r2'],
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "all_model_scores": model_report
             }
 
             os.makedirs(os.path.dirname(self.model_trainer_config.metadata_file_path), exist_ok=True)
             with open(self.model_trainer_config.metadata_file_path, "w") as f:
                 json.dump(metadata, f, indent=4)
 
-            # Visualization of all models
-            plt.figure(figsize=(8, 5))
-            plt.bar(model_report.keys(), model_report.values(), color="skyblue")
-            plt.xticks(rotation=45)
-            plt.ylabel("R2 Score")
-            plt.title("Model Comparison")
-            plt.tight_layout()
-            plt.savefig("artifacts/model_comparison.png")
-            logging.info("Model comparison plot saved at artifacts/model_comparison.png")
+            logging.info("Comprehensive model evaluation completed with visualizations and detailed metrics")
 
             return r2_square
 
