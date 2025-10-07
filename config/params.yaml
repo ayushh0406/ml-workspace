@@ -1,0 +1,182 @@
+# Model Training Configuration
+model_training:
+  random_state: 42
+  test_size: 0.2
+  cross_validation_folds: 5
+  
+  # Model hyperparameters
+  models:
+    random_forest:
+      n_estimators: [100, 200, 300]
+      max_depth: [10, 20, null]
+      min_samples_split: [2, 5, 10]
+      min_samples_leaf: [1, 2, 4]
+      
+    gradient_boosting:
+      n_estimators: [100, 200]
+      learning_rate: [0.01, 0.1, 0.2]
+      max_depth: [3, 5, 7]
+      subsample: [0.8, 0.9, 1.0]
+      
+    xgboost:
+      n_estimators: [100, 200]
+      learning_rate: [0.01, 0.1, 0.2]
+      max_depth: [3, 5, 7]
+      subsample: [0.8, 0.9, 1.0]
+      
+    catboost:
+      iterations: [100, 200]
+      learning_rate: [0.01, 0.1, 0.2]
+      depth: [4, 6, 8]
+      
+    linear_regression:
+      fit_intercept: [true, false]
+      
+    decision_tree:
+      max_depth: [10, 20, null]
+      min_samples_split: [2, 5, 10]
+      criterion: ['mse', 'friedman_mse', 'mae']
+
+# Data Processing Configuration
+data_processing:
+  # Missing value handling
+  missing_value_strategy:
+    numerical: 'median'
+    categorical: 'most_frequent'
+  
+  # Outlier detection
+  outlier_detection:
+    method: 'iqr'  # 'iqr' or 'zscore'
+    threshold: 1.5
+    
+  # Feature scaling
+  scaling:
+    numerical_features: 'standard'  # 'standard', 'minmax', 'robust'
+    categorical_features: 'onehot'  # 'onehot', 'label'
+
+# Data Validation Configuration
+data_validation:
+  # Expected data ranges
+  score_ranges:
+    math_score: [0, 100]
+    reading_score: [0, 100]
+    writing_score: [0, 100]
+    
+  # Missing value thresholds
+  missing_value_threshold: 0.2  # 20%
+  
+  # Outlier thresholds
+  outlier_threshold: 0.1  # 10%
+  
+  # Expected data types
+  expected_dtypes:
+    gender: 'object'
+    race_ethnicity: 'object'
+    parental_level_of_education: 'object'
+    lunch: 'object'
+    test_preparation_course: 'object'
+    math_score: 'int64'
+    reading_score: 'int64'
+    writing_score: 'int64'
+
+# Model Evaluation Configuration
+model_evaluation:
+  # Metrics to calculate
+  regression_metrics:
+    - 'r2_score'
+    - 'mean_squared_error'
+    - 'mean_absolute_error'
+    - 'root_mean_squared_error'
+    - 'mean_absolute_percentage_error'
+    
+  # Visualization settings
+  plot_settings:
+    figure_size: [12, 8]
+    dpi: 300
+    style: 'seaborn'
+    
+  # Model selection criteria
+  selection_criteria:
+    primary_metric: 'r2_score'
+    minimum_score: 0.6
+
+# Explainability Configuration
+explainability:
+  # SHAP configuration
+  shap:
+    sample_size: 100
+    plot_types: ['summary', 'bar', 'waterfall']
+    
+  # Feature importance
+  feature_importance:
+    methods: ['builtin', 'permutation', 'shap']
+    
+  # Partial dependence
+  partial_dependence:
+    top_features: 4
+
+# Logging Configuration
+logging:
+  version: 1
+  disable_existing_loggers: false
+  
+  formatters:
+    standard:
+      format: '[%(asctime)s] %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(funcName)s() - %(message)s'
+    simple:
+      format: '[%(asctime)s] %(levelname)s - %(message)s'
+      
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: INFO
+      formatter: simple
+      stream: ext://sys.stdout
+      
+    file:
+      class: logging.handlers.RotatingFileHandler
+      level: INFO
+      formatter: standard
+      filename: logs/app.log
+      maxBytes: 10485760  # 10MB
+      backupCount: 5
+      
+    error_file:
+      class: logging.handlers.RotatingFileHandler
+      level: ERROR
+      formatter: standard
+      filename: logs/error.log
+      maxBytes: 5242880   # 5MB
+      backupCount: 3
+      
+  loggers:
+    '':
+      level: INFO
+      handlers: [console, file, error_file]
+      propagate: false
+
+# File Paths Configuration
+paths:
+  # Data paths
+  data:
+    raw_data: 'notebook/data/stud.csv'
+    train_data: 'artifacts/train.csv'
+    test_data: 'artifacts/test.csv'
+    
+  # Model paths
+  models:
+    trained_model: 'artifacts/model.pkl'
+    preprocessor: 'artifacts/preprocessor.pkl'
+    metadata: 'artifacts/model_metadata.json'
+    
+  # Report paths
+  reports:
+    evaluation_report: 'artifacts/model_evaluation_report.html'
+    validation_report: 'artifacts/validation_report.txt'
+    explainability_report: 'artifacts/explainability'
+    
+  # Log paths
+  logs:
+    directory: 'logs'
+    main_log: 'logs/app.log'
+    error_log: 'logs/error.log'
