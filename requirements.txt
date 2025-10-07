@@ -10,3 +10,5 @@ dill
 scipy
 plotly
 shap
+pytest
+pytest-cov
