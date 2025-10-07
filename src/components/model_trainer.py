@@ -27,6 +27,7 @@ from src.exception import CustomException
 from src.logger import logging
 from src.utils import save_object, evaluate_models
 from src.components.model_evaluator import ModelEvaluator
+from src.components.model_explainer import ModelExplainer
 
 
 @dataclass
@@ -107,8 +108,9 @@ class ModelTrainer:
 
             logging.info(f"Best model found: {best_model_name} with score {best_model_score}")
 
-            # Initialize comprehensive model evaluator
+            # Initialize comprehensive model evaluator and explainer
             evaluator = ModelEvaluator()
+            explainer = ModelExplainer()
             
             # Define feature names for feature importance plots
             feature_names = ["writing_score", "reading_score", "gender", "race_ethnicity", 
@@ -123,6 +125,17 @@ class ModelTrainer:
                 X_test=X_test, 
                 y_test=y_test,
                 feature_names=feature_names
+            )
+            
+            # Model explainability for best model
+            logging.info("Generating model explainability analysis")
+            explainer.explain_model(
+                model=best_model,
+                X_train=X_train,
+                X_test=X_test,
+                y_test=y_test,
+                feature_names=feature_names,
+                model_name=best_model_name
             )
 
             # Save best model

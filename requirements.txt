@@ -9,3 +9,4 @@ Flask
 dill
 scipy
 plotly
+shap
