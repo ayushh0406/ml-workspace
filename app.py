@@ -1,4 +1,4 @@
-from flask import Flask,request,render_template
+from flask import Flask,request,render_template,jsonify
 import numpy as np
 import pandas as pd
 
@@ -39,8 +39,54 @@ def predict_datapoint():
         results=predict_pipeline.predict(pred_df)
         print("after Prediction")
         return render_template('home.html',results=results[0])
+
+@app.route('/api/predict', methods=['POST'])
+def api_predict():
+    """API endpoint for predictions"""
+    try:
+        # Get JSON data
+        json_data = request.get_json()
+        
+        if not json_data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+        
+        # Create CustomData object
+        data = CustomData(
+            gender=json_data.get('gender'),
+            race_ethnicity=json_data.get('race_ethnicity'),
+            parental_level_of_education=json_data.get('parental_level_of_education'),
+            lunch=json_data.get('lunch'),
+            test_preparation_course=json_data.get('test_preparation_course'),
+            reading_score=float(json_data.get('reading_score')),
+            writing_score=float(json_data.get('writing_score'))
+        )
+        
+        # Get prediction
+        pred_df = data.get_data_as_data_frame()
+        predict_pipeline = PredictPipeline()
+        results = predict_pipeline.predict(pred_df)
+        
+        # Return JSON response
+        return jsonify({
+            'prediction': float(results[0]),
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'ML API is running'
+    }), 200
     
 
 if __name__=="__main__":
-    app.run(host="0.0.0.0")        
+    app.run(host="0.0.0.0", debug=True)        
 

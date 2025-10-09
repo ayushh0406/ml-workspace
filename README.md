@@ -1,5 +1,3 @@
-
-
 # Student Performance – End-to-End ML Project
 
 Predict student performance using an end‑to‑end machine learning pipeline with robust EDA, feature engineering, model training, evaluation, and inference. The project is modular, config‑driven, and production‑friendly.
@@ -296,4 +294,37 @@ python -m src.mlproject.pipeline.training_pipeline
 - Fairness metrics and bias checks
 
 ---
+## 🖥️ Run locally (PowerShell)
+
+If you're on Windows PowerShell, use the following commands from the project root:
+
+```powershell
+# Create virtual environment
+python -m venv .venv
+
+# Activate the virtual environment (PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Upgrade pip and install requirements
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+# (Optional) install package in editable mode
+pip install -e .
+
+# Run unit tests
+pytest -q
+
+# Run full training pipeline
+python -m src.pipelines.train_pipeline
+```
+
+Tips:
+- If PowerShell blocks script execution, enable it temporarily using:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+```
+
+- Use `artifacts/` directory to find models, plots, and reports.
 
