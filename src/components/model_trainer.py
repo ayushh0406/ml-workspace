@@ -32,13 +32,31 @@ from src.components.model_explainer import ModelExplainer
 
 @dataclass
 class ModelTrainerConfig:
-    trained_model_file_path = os.path.join("artifacts", "model.pkl")
-    metadata_file_path = os.path.join("artifacts", "model_metadata.json")
+    """Enhanced model trainer configuration"""
+    trained_model_file_path: str = os.path.join("artifacts", "model.pkl")
+    metadata_file_path: str = os.path.join("artifacts", "model_metadata.json")
+    model_comparison_file: str = os.path.join("artifacts", "model_comparison.json")
+    
+    # Training parameters
+    cv_folds: int = 5
+    scoring_metric: str = 'r2'
+    n_jobs: int = -1
+    early_stopping: bool = True
+    patience: int = 10
+    
+    # Model selection criteria
+    min_score_threshold: float = 0.6
+    select_best_model: bool = True
+    ensemble_models: bool = False
 
 
 class ModelTrainer:
+    """Enhanced model trainer with advanced features"""
+    
     def __init__(self):
         self.model_trainer_config = ModelTrainerConfig()
+        self.trained_models = {}
+        self.model_scores = {}
 
     def initiate_model_trainer(self, train_array, test_array):
         try:
